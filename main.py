@@ -2,8 +2,9 @@ import json
 import sys
 from pathlib import Path
 
-
+from db import save_record
 from llm_service import analyze_jd_with_llm
+
 
 TECH_KEYWORDS = [
     "Python",
@@ -31,40 +32,20 @@ TECH_KEYWORDS = [
 def read_jd_file(file_path: str) -> str:
     """
     读取岗位 JD 文件内容。
-
-    参数:
-        file_path: JD 文件路径，例如 "jd.txt"
-
-    返回:
-        文件中的文本内容
-
-    如果文件不存在，会抛出 FileNotFoundError。
     """
 
-    # 获取当前 main.py 所在的文件夹
     current_dir = Path(__file__).parent
+    full_path = current_dir / file_path
 
-    # 拼接出文件完整路径
-    path = current_dir / file_path
+    if not full_path.exists():
+        raise FileNotFoundError(f"文件不存在: {full_path}")
 
-    if not path.exists():
-        raise FileNotFoundError(f"文件不存在: {path}")
-
-    text = path.read_text(encoding="utf-8")
-
-    return text
+    return full_path.read_text(encoding="utf-8")
 
 
 def extract_keywords(text: str, keywords: list[str]) -> list[str]:
     """
-    从文本中提取出现过的关键词。
-
-    参数:
-        text: 岗位 JD 文本
-        keywords: 需要匹配的关键词列表
-
-    返回:
-        在文本中出现过的关键词列表
+    从文本中提取关键词。
     """
 
     text_lower = text.lower()
@@ -80,27 +61,17 @@ def extract_keywords(text: str, keywords: list[str]) -> list[str]:
 def analyze_text_length(text: str) -> dict:
     """
     分析文本长度。
-
-    参数:
-        text: 岗位 JD 文本
-
-    返回:
-        包含字符数和行数的字典
     """
 
     return {
         "char_count": len(text),
         "line_count": len(text.splitlines()),
     }
+
+
 def judge_difficulty(found_keywords: list[str]) -> str:
     """
-    根据识别到的关键词判断岗位难度。
-
-    参数:
-        found_keywords: 已经在 JD 中找到的关键词列表
-
-    返回:
-        岗位难度判断结果
+    根据关键词判断岗位难度。
     """
 
     advanced_keywords = [
@@ -129,15 +100,11 @@ def judge_difficulty(found_keywords: list[str]) -> str:
         return "适合有一定基础的初学者"
     else:
         return "适合初学者"
+
+
 def generate_learning_suggestions(found_keywords: list[str]) -> list[str]:
     """
     根据识别到的关键词生成学习建议。
-
-    参数:
-        found_keywords: 已经在 JD 中找到的关键词列表
-
-    返回:
-        学习建议列表
     """
 
     suggestions = []
@@ -172,6 +139,9 @@ def generate_learning_suggestions(found_keywords: list[str]) -> list[str]:
     if "Docker" in found_keywords:
         suggestions.append("了解 Docker 基础，能够为 Python / FastAPI 项目编写简单 Dockerfile。")
 
+    if "Git" in found_keywords:
+        suggestions.append("学习 Git 基础，掌握 init、add、commit、branch 和 push。")
+
     if "SQL" in found_keywords or "PostgreSQL" in found_keywords or "SQLite" in found_keywords:
         suggestions.append("学习数据库基础，掌握表、增删改查、SQLite 和 PostgreSQL 的基本使用。")
 
@@ -179,26 +149,23 @@ def generate_learning_suggestions(found_keywords: list[str]) -> list[str]:
         suggestions.append("这个 JD 暂时没有识别到 AI Agent 相关关键词，建议先巩固 Python 基础和 Git 使用。")
 
     return suggestions
+
+
 def analyze_jd(text: str) -> dict:
     """
-    分析岗位 JD 文本。
-
-    参数:
-        text: 岗位 JD 文本
-
-    返回:
-        分析结果字典
+    规则版 JD 分析。
     """
 
     length_info = analyze_text_length(text)
     found_keywords = extract_keywords(text, TECH_KEYWORDS)
     difficulty = judge_difficulty(found_keywords)
     suggestions = generate_learning_suggestions(found_keywords)
+
     return {
         "length_info": length_info,
         "found_keywords": found_keywords,
         "keyword_count": len(found_keywords),
-        "has_agent_keyword":"Agent" in found_keywords,
+        "has_agent_keyword": "Agent" in found_keywords,
         "difficulty": difficulty,
         "suggestions": suggestions,
     }
@@ -207,12 +174,7 @@ def analyze_jd(text: str) -> dict:
 def main():
     """
     程序入口。
-    支持规则分析和 LLM 分析两种模式。
-
-    用法:
-        python main.py jd.txt
-        python main.py jd.txt --rule
-        python main.py jd.txt --llm
+    支持规则分析、LLM 分析，以及保存分析记录。
     """
 
     if len(sys.argv) < 2:
@@ -220,20 +182,21 @@ def main():
         print("  python main.py jd.txt")
         print("  python main.py jd.txt --rule")
         print("  python main.py jd.txt --llm")
+        print("  python main.py jd.txt --rule --save")
+        print("  python main.py jd.txt --llm --save")
         return
 
     file_path = sys.argv[1]
 
-    # 默认使用规则分析
     mode = "rule"
 
-    # 如果命令行参数里包含 --llm，就使用大模型分析
     if "--llm" in sys.argv:
         mode = "llm"
 
-    # 如果命令行参数里包含 --rule，就使用规则分析
     if "--rule" in sys.argv:
         mode = "rule"
+
+    should_save = "--save" in sys.argv
 
     try:
         jd_text = read_jd_file(file_path)
@@ -248,10 +211,16 @@ def main():
             "result": result,
         }
 
+        if should_save:
+            record_id = save_record(mode, jd_text, result)
+            output["saved"] = True
+            output["record_id"] = record_id
+
         print(json.dumps(output, ensure_ascii=False, indent=2))
 
     except FileNotFoundError as error:
         print(f"错误: {error}")
+
 
 if __name__ == "__main__":
     main()
