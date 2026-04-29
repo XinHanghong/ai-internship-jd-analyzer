@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 
 
+from llm_service import analyze_jd_with_llm
+
 TECH_KEYWORDS = [
     "Python",
     "FastAPI",
@@ -204,24 +206,47 @@ def analyze_jd(text: str) -> dict:
 
 def main():
     """
-    程序入口函数。
+    程序入口。
+    支持规则分析和 LLM 分析两种模式。
     """
 
     if len(sys.argv) < 2:
-        print("用法: python main.py jd.txt")
+        print("用法:")
+        print("  python main.py jd.txt")
+        print("  python main.py jd.txt --rule")
+        print("  python main.py jd.txt --llm")
         return
 
     file_path = sys.argv[1]
 
+    # 默认使用规则分析
+    mode = "rule"
+
+    # 如果命令行里有 --llm，就使用大模型分析
+    if "--llm" in sys.argv:
+        mode = "llm"
+
+    # 如果命令行里有 --rule，就使用规则分析
+    if "--rule" in sys.argv:
+        mode = "rule"
+
     try:
         jd_text = read_jd_file(file_path)
-        result = analyze_jd(jd_text)
 
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        if mode == "llm":
+            result = analyze_jd_with_llm(jd_text)
+        else:
+            result = analyze_jd(jd_text)
+
+        output = {
+            "mode": mode,
+            "result": result,
+        }
+
+        print(json.dumps(output, ensure_ascii=False, indent=2))
 
     except FileNotFoundError as error:
-        print(f"错误：{error}")
-
+        print(f"错误: {error}")
 
 if __name__ == "__main__":
     main()
