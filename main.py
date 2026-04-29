@@ -208,6 +208,11 @@ def main():
     """
     程序入口。
     支持规则分析和 LLM 分析两种模式。
+
+    用法:
+        python main.py jd.txt
+        python main.py jd.txt --rule
+        python main.py jd.txt --llm
     """
 
     if len(sys.argv) < 2:
@@ -222,11 +227,11 @@ def main():
     # 默认使用规则分析
     mode = "rule"
 
-    # 如果命令行里有 --llm，就使用大模型分析
+    # 如果命令行参数里包含 --llm，就使用大模型分析
     if "--llm" in sys.argv:
         mode = "llm"
 
-    # 如果命令行里有 --rule，就使用规则分析
+    # 如果命令行参数里包含 --rule，就使用规则分析
     if "--rule" in sys.argv:
         mode = "rule"
 
