@@ -23,15 +23,25 @@ client = OpenAI(
 def parse_json_output(output_text: str) -> dict:
     """
     尝试把模型输出解析成 JSON。
+    兼容纯 JSON、Markdown JSON 代码块，以及前后带解释文字的情况。
     """
 
     text = output_text.strip()
 
-    # 有些模型可能会返回 ```json ... ```，这里做简单清理
     if text.startswith("```json"):
-        text = text.removeprefix("```json").removesuffix("```").strip()
-    elif text.startswith("```"):
-        text = text.removeprefix("```").removesuffix("```").strip()
+        text = text.removeprefix("```json").strip()
+
+    if text.startswith("```"):
+        text = text.removeprefix("```").strip()
+
+    if text.endswith("```"):
+        text = text.removesuffix("```").strip()
+
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start != -1 and end != -1 and start < end:
+        text = text[start:end + 1]
 
     return json.loads(text)
 
@@ -44,7 +54,14 @@ def analyze_jd_with_llm(jd_text: str) -> dict:
     prompt = f"""
 你是一个 AI Agent 实习求职导师。
 
-请分析下面这段岗位 JD，并严格返回 JSON，不要返回 Markdown，不要添加额外解释。
+请分析下面这段岗位 JD，并严格返回 JSON。
+
+要求：
+1. 只能返回 JSON
+2. 不要返回 Markdown
+3. 不要使用 ```json 代码块
+4. 不要添加任何解释性文字
+5. 返回内容必须能被 Python 的 json.loads() 直接解析
 
 岗位 JD：
 {jd_text}
