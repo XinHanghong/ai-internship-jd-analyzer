@@ -75,3 +75,48 @@ def save_record(mode: str, jd_text: str, result: dict) -> int:
     conn.close()
 
     return record_id
+def get_recent_records(limit: int = 10) -> list[dict]:
+    """
+    获取最近的分析记录。
+
+    参数:
+        limit: 最多返回多少条记录
+
+    返回:
+        最近的分析记录列表
+    """
+
+    init_db()
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, mode, jd_text, result_json, created_at
+        FROM records
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    records = []
+
+    for row in rows:
+        record_id, mode, jd_text, result_json, created_at = row
+
+        records.append(
+            {
+                "id": record_id,
+                "mode": mode,
+                "jd_preview": jd_text[:80],
+                "result": json.loads(result_json),
+                "created_at": created_at,
+            }
+        )
+
+    return records

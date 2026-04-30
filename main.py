@@ -2,7 +2,7 @@ import json
 import sys
 from pathlib import Path
 
-from db import save_record
+from db import save_record, get_recent_records
 from llm_service import analyze_jd_with_llm
 
 
@@ -176,7 +176,10 @@ def main():
     程序入口。
     支持规则分析、LLM 分析，以及保存分析记录。
     """
-
+    if "--history" in sys.argv:
+        records = get_recent_records()
+        print(json.dumps(records, ensure_ascii=False, indent=2))
+        return
     if len(sys.argv) < 2:
         print("用法:")
         print("  python main.py jd.txt")
@@ -184,6 +187,7 @@ def main():
         print("  python main.py jd.txt --llm")
         print("  python main.py jd.txt --rule --save")
         print("  python main.py jd.txt --llm --save")
+        print("  python main.py --history")
         return
 
     file_path = sys.argv[1]
