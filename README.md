@@ -162,3 +162,12 @@ python main.py --history
 - 接入 RAG，用于岗位知识库检索
 - 使用 LangChain / LangGraph 实现求职助手 Agent
 - 尝试接入 MCP 工具调用能力
+## FastAPI 接口版本
+
+项目支持使用 FastAPI 启动后端服务。
+
+启动方式：
+
+```bash
+uvicorn app:app --reload
+启动后打开http://127.0.0.1:8000/docs
