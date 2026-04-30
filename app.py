@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from main import analyze_jd
 from llm_service import analyze_jd_with_llm
-
+from db import save_record, get_recent_records
 
 app = FastAPI(
     title="AI Internship JD Analyzer",
@@ -15,7 +15,7 @@ app = FastAPI(
 class AnalyzeRequest(BaseModel):
     jd_text: str
     mode: str = "rule"
-
+    save: bool = False
 
 @app.get("/")
 def health_check():
@@ -27,12 +27,28 @@ def health_check():
 
 @app.post("/analyze")
 def analyze(request: AnalyzeRequest):
-    if request.mode == "llm":
+    mode = request.mode
+
+    if mode == "llm":
         result = analyze_jd_with_llm(request.jd_text)
     else:
+        mode = "rule"
         result = analyze_jd(request.jd_text)
 
-    return {
-        "mode": request.mode,
+    response = {
+        "mode": mode,
         "result": result,
+    }
+
+    if request.save:
+        record_id = save_record(mode, request.jd_text, result)
+        response["saved"] = True
+        response["record_id"] = record_id
+
+    return response
+@app.get("/history")
+def history():
+    records = get_recent_records()
+    return {
+        "records": records
     }
