@@ -1,0 +1,8 @@
+Python 后端实习生
+
+岗位职责：
+参与后端接口开发，负责业务 API、数据库设计和服务维护。
+
+岗位要求：
+熟悉 Python，了解 FastAPI 或 Flask，了解 SQL、SQLite、PostgreSQL。
+加分项包括 Docker、Linux、Git 和基础测试经验。

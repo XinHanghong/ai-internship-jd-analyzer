@@ -1,0 +1,8 @@
+AI Agent 实习生
+
+岗位职责：
+参与 AI Agent 应用开发，负责工具调用、任务拆解、多轮对话和智能体工作流设计。
+
+岗位要求：
+熟悉 Python，了解大模型 API 调用，了解 FastAPI。
+加分项包括 RAG、LangChain、LangGraph、Function Calling、向量数据库和 Docker。

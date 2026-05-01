@@ -1,0 +1,8 @@
+RAG 应用开发实习生
+
+岗位职责：
+参与企业知识库问答系统建设，负责文档切分、Embedding、向量检索、召回优化和回答生成。
+
+岗位要求：
+熟悉 Python，了解 RAG 基本流程，了解 Chroma、FAISS、Milvus 等向量数据库。
+加分项包括 LangChain、LlamaIndex、FastAPI 和 Prompt 优化经验。
