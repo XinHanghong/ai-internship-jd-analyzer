@@ -171,3 +171,26 @@ python main.py --history
 ```bash
 uvicorn app:app --reload
 启动后打开http://127.0.0.1:8000/docs
+### POST /rag
+
+基于岗位 JD 知识库进行 RAG 求职问答。
+
+请求示例：
+
+```json
+{
+  "query": "我刚学完 Python，想找 AI Agent 实习，应该看哪些岗位？",
+  "top_k": 2
+}
+
+---
+
+# 第三步升级：提交 GitHub
+
+测试成功后：
+
+```powershell
+git status
+git add .
+git commit -m "add rag api endpoint"
+git push

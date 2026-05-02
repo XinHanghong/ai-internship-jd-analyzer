@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from main import analyze_jd
 from llm_service import analyze_jd_with_llm
 from db import save_record, get_recent_records
-
+from rag_answer_service import answer_with_rag
 app = FastAPI(
     title="AI Internship JD Analyzer",
     description="一个用于分析 AI / Agent 实习岗位 JD 的 API 服务",
@@ -16,7 +16,9 @@ class AnalyzeRequest(BaseModel):
     jd_text: str
     mode: str = "rule"
     save: bool = False
-
+class RagRequest(BaseModel):
+    query: str
+    top_k: int = 2
 @app.get("/")
 def health_check():
     return {
@@ -52,3 +54,11 @@ def history():
     return {
         "records": records
     }
+@app.post("/rag")
+def rag_answer(request: RagRequest):
+    result = answer_with_rag(
+        query=request.query,
+        top_k=request.top_k,
+    )
+
+    return result
